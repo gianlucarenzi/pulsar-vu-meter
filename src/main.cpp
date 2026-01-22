@@ -12,11 +12,12 @@
 #include <Adafruit_NeoPixel.h>
 
 /* Pin and LED configuration */
-#ifndef VU_METER_DATA_PIN
-#error "VU_METER_DATA_PIN is not defined! Please define it for your environment in platformio.ini"
+#ifndef VU_METER_DATA_PIN_1
+#error "VU_METER_DATA_PIN_1 is not defined! Please define it for your environment in platformio.ini"
 #endif
 
-#define VU_METER_NUM_LEDS   12   /* Number of LEDs in the strip */
+#define VU_METER_NUM_LEDS   12   /* Number of LEDs in each strip */
+#define MAX_STRIPS          3    /* Maximum number of strips supported */
 
 /* Serial communication protocol defines (only used in serial mode) */
 #ifndef INPUT_MODE_ANALOG
@@ -40,12 +41,13 @@
 static bool vu_meter_reverse_order = false; /* Flag to reverse VU-Meter direction */
 
 /*
- * C++ object instantiation for the NeoPixel strip.
- * This is a necessary deviation from pure C kernel style.
+ * Array to hold one or more LED strip objects.
+ * We use pointers to avoid issues with object copying and a C-style
+ * array for maximum compatibility (AVR does not have std::vector).
  */
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(VU_METER_NUM_LEDS,
-                                            VU_METER_DATA_PIN,
-                                            NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel* strips[MAX_STRIPS];
+int active_strips_count = 0;
+
 
 /*
  * vu_meter_get_color - Determine color based on LED position.
@@ -56,19 +58,22 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(VU_METER_NUM_LEDS,
  */
 static uint32_t vu_meter_get_color(int led_index)
 {
+    // Color values are the same for all strips, so we can use the first one to generate them.
+    if (active_strips_count == 0) return 0;
+
     if (led_index < SEGMENT_END_GREEN) {
-        return strip.Color(0, 150, 0);   /* Green */
+        return strips[0]->Color(0, 150, 0);   /* Green */
     } else if (led_index < SEGMENT_END_YELLOW) {
-        return strip.Color(150, 150, 0); /* Yellow */
+        return strips[0]->Color(150, 150, 0); /* Yellow */
     } else if (led_index < SEGMENT_END_ORANGE) {
-        return strip.Color(255, 100, 0); /* Orange */
+        return strips[0]->Color(255, 100, 0); /* Orange */
     } else {
-        return strip.Color(200, 0, 0);   /* Red */
+        return strips[0]->Color(200, 0, 0);   /* Red */
     }
 }
 
 /*
- * update_leds - Updates the LED strip based on the CPU level.
+ * update_leds - Updates all LED strips based on the level.
  * @level: The level to display, 0-100.
  *
  * This function implements the multi-segment VU-meter logic, including
@@ -76,17 +81,21 @@ static uint32_t vu_meter_get_color(int led_index)
  */
 static void update_leds(int level)
 {
+    if (active_strips_count == 0) return;
+
     int i;
     int leds_to_light;
     int pixel_index;
-    uint32_t color_off = strip.Color(0, 0, 0);
+    uint32_t color_off = strips[0]->Color(0, 0, 0);
 
     /* Special case: if level is very low, light only the first LED green */
     if (level < 5) {
-        strip.clear(); /* Turn off all LEDs */
-        pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1) : 0;
-        strip.setPixelColor(pixel_index, vu_meter_get_color(0)); /* First LED is always green */
-        strip.show();
+        for (i = 0; i < active_strips_count; i++) {
+            strips[i]->clear();
+            pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1) : 0;
+            strips[i]->setPixelColor(pixel_index, vu_meter_get_color(0));
+            strips[i]->show();
+        }
         return; /* Exit function */
     }
 
@@ -94,40 +103,63 @@ static void update_leds(int level)
     leds_to_light = map(level, 5, 100, 1, VU_METER_NUM_LEDS);
     leds_to_light = constrain(leds_to_light, 0, VU_METER_NUM_LEDS);
 
-    /* Update each individual LED */
+    /* Update each individual LED on all strips */
     for (i = 0; i < VU_METER_NUM_LEDS; i++) {
         pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1 - i) : i;
-
-        if (i < leds_to_light) {
-            /* This LED should be on. Determine its color based on its position. */
-            strip.setPixelColor(pixel_index, vu_meter_get_color(i));
-        } else {
-            /* This LED should be off */
-            strip.setPixelColor(pixel_index, color_off);
+        uint32_t color = (i < leds_to_light) ? vu_meter_get_color(i) : color_off;
+        
+        for (int j = 0; j < active_strips_count; j++) {
+            strips[j]->setPixelColor(pixel_index, color);
         }
     }
 
-    strip.show(); /* Send the new colors to all LEDs */
+    /* Send the new colors to all strips at once */
+    for (i = 0; i < active_strips_count; i++) {
+        strips[i]->show();
+    }
 }
 
 /*
  * setup - Arduino's initialization function.
  *
- * Sets up serial communication and initializes the NeoPixel strip.
+ * Initializes serial communication (if needed) and creates/initializes
+ * all NeoPixel strip objects defined in the build flags.
  */
 void setup()
 {
 #ifndef INPUT_MODE_ANALOG
     Serial.begin(9600); /* Initialize serial communication only in serial mode */
 #endif
-    strip.begin();      /* Initialize NeoPixel library */
-    strip.show();       /* Turn off all LEDs at startup */
+
+    // Conditionally create strip objects based on defined pins
+#ifdef VU_METER_DATA_PIN_1
+    if (active_strips_count < MAX_STRIPS) {
+        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_1, NEO_GRB + NEO_KHZ800);
+    }
+#endif
+#ifdef VU_METER_DATA_PIN_2
+    if (active_strips_count < MAX_STRIPS) {
+        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_2, NEO_GRB + NEO_KHZ800);
+    }
+#endif
+#ifdef VU_METER_DATA_PIN_3
+    if (active_strips_count < MAX_STRIPS) {
+        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_3, NEO_GRB + NEO_KHZ800);
+    }
+#endif
+
+    // Initialize all created strips
+    for (int i = 0; i < active_strips_count; i++) {
+        strips[i]->begin();
+        strips[i]->show(); // Turn off all LEDs at startup
+    }
 }
 
 /*
  * loop - Arduino's main continuous loop function.
  *
- * Reads serial data, processes commands, and updates the LED display.
+ * Reads data from the selected source (analog or serial), processes it,
+ * and updates the LED display.
  */
 void loop()
 {
@@ -191,3 +223,4 @@ void loop()
     }
 #endif
 }
+
