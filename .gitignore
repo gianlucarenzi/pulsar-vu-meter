@@ -15,3 +15,5 @@ Thumbs.db
 __pycache__/
 *.pyc
 /sniffer.py
+qtmeter/moc_*.cpp
+qtmeter/moc_*.h
