@@ -1,0 +1,16 @@
+# PlatformIO specific files
+.pio/
+.vscode/
+
+# Build results
+*.hex
+*.bin
+*.elf
+
+# Generic OS generated files
+.DS_Store
+Thumbs.db
+
+# Python bytecode
+__pycache__/
+*.pyc
