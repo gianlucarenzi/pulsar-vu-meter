@@ -18,9 +18,11 @@
 
 #define VU_METER_NUM_LEDS   12   /* Number of LEDs in the strip */
 
-/* Serial communication protocol defines */
+/* Serial communication protocol defines (only used in serial mode) */
+#ifndef INPUT_MODE_ANALOG
 #define VU_METER_HEADER_1   0xAB
 #define VU_METER_HEADER_2   0xBA
+#endif
 
 /* Command definitions */
 #define CMD_REVERSE_ORDER   0x01
@@ -67,20 +69,20 @@ static uint32_t vu_meter_get_color(int led_index)
 
 /*
  * update_leds - Updates the LED strip based on the CPU level.
- * @cpu_level: The CPU load percentage (0-100).
+ * @level: The level to display, 0-100.
  *
  * This function implements the multi-segment VU-meter logic, including
  * the special case for low CPU usage and color segmentation.
  */
-static void update_leds(int cpu_level)
+static void update_leds(int level)
 {
     int i;
     int leds_to_light;
     int pixel_index;
     uint32_t color_off = strip.Color(0, 0, 0);
 
-    /* Special case: if CPU is very low, light only the first LED green */
-    if (cpu_level < 5) {
+    /* Special case: if level is very low, light only the first LED green */
+    if (level < 5) {
         strip.clear(); /* Turn off all LEDs */
         pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1) : 0;
         strip.setPixelColor(pixel_index, vu_meter_get_color(0)); /* First LED is always green */
@@ -88,8 +90,8 @@ static void update_leds(int cpu_level)
         return; /* Exit function */
     }
 
-    /* Map CPU level (5-100) to number of LEDs (1-12) */
-    leds_to_light = map(cpu_level, 5, 100, 1, VU_METER_NUM_LEDS);
+    /* Map level (5-100) to number of LEDs (1-12) */
+    leds_to_light = map(level, 5, 100, 1, VU_METER_NUM_LEDS);
     leds_to_light = constrain(leds_to_light, 0, VU_METER_NUM_LEDS);
 
     /* Update each individual LED */
@@ -115,7 +117,9 @@ static void update_leds(int cpu_level)
  */
 void setup()
 {
-    Serial.begin(9600); /* Initialize serial communication */
+#ifndef INPUT_MODE_ANALOG
+    Serial.begin(9600); /* Initialize serial communication only in serial mode */
+#endif
     strip.begin();      /* Initialize NeoPixel library */
     strip.show();       /* Turn off all LEDs at startup */
 }
@@ -127,6 +131,44 @@ void setup()
  */
 void loop()
 {
+#ifdef INPUT_MODE_ANALOG
+    /**************************/
+    /* --- MODO AUDIO/ADC --- */
+    /**************************/
+    const int sample_window_ms = 50; /* Sample window for peak detection */
+    unsigned int sample;
+    unsigned long start_millis = millis();
+    unsigned int peak_to_peak = 0;
+    unsigned int signal_max = 0;
+    unsigned int signal_min = 1024;
+
+    while (millis() - start_millis < sample_window_ms) {
+        sample = analogRead(ANALOG_INPUT_PIN);
+        if (sample < 1024) { /* Sanity check for faulty readings */
+            if (sample > signal_max) {
+                signal_max = sample;
+            } else if (sample < signal_min) {
+                signal_min = sample;
+            }
+        }
+    }
+    peak_to_peak = signal_max - signal_min;
+
+    /*
+     * Map the peak-to-peak amplitude to the 0-100 range.
+     * A 2Vp-p signal on a 5V Arduino is ~410 ADC units.
+     * We map a range from 10 (noise floor) to 500 for good sensitivity.
+     * This may need tuning based on the actual audio circuit.
+     */
+    int level = map(peak_to_peak, 10, 500, 0, 100);
+    level = constrain(level, 0, 100);
+
+    update_leds(level);
+
+#else
+    /***************************/
+    /* --- MODO SERIAL/CPU --- */
+    /***************************/
     /* Check if enough bytes are available for a complete packet */
     if (Serial.available() >= 4) {
         /* 1. Search for the Header sequence */
@@ -147,4 +189,5 @@ void loop()
             update_leds(cpu_val);
         }
     }
+#endif
 }
