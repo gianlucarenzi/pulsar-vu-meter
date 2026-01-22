@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 """
-host_script.py - Sends CPU usage to an Arduino-based VU-meter.
+pulsar_host.py - Sends CPU usage to a Pulsar VU-meter (Arduino-based).
 
 This script reads the overall CPU utilization of the system and sends it
-via a serial port to an Arduino. The Arduino then displays this information
-on an RGB LED strip as a VU-meter.
+via a serial port to an Arduino. The Pulsar VU-meter then displays this
+information on an RGB LED strip.
 
 The serial protocol consists of a 4-byte packet:
 [HEADER_1, HEADER_2, CPU_LOAD, COMMAND]
-- HEADER_1 (0xAB): First byte of the packet header.
-- HEADER_2 (0xBA): Second byte of the packet header.
+- HEADER_1 (0xAB): First byte of the packet header (corresponds to PULSAR_VU_HEADER_1 in firmware).
+- HEADER_2 (0xBA): Second byte of the packet header (corresponds to PULSAR_VU_HEADER_2 in firmware).
 - CPU_LOAD (0-100): Current overall CPU load percentage.
 - COMMAND (0x00 for none, 0x01 to toggle LED display direction).
 """

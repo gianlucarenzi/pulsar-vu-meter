@@ -1,28 +1,29 @@
 /*
- * main.cpp - Firmware for a CPU VU-meter using NeoPixel LEDs
+ * main.cpp - Firmware for the Pulsar VU project
  *
- * This sketch reads CPU load data from a serial port and displays it
- * on a 12-LED WS2812B strip in a multi-segmented VU-meter style.
+ * This firmware can operate in two modes:
+ * 1. CPU Monitor: Reads CPU load data from a serial port and displays it.
+ * 2. Audio VU-Meter: Reads an analog audio signal and displays its volume.
  *
  * This project is configured for PlatformIO and supports multiple boards
- * like Arduino Nano and ESP32.
+ * and configurations.
  */
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
 /* Pin and LED configuration */
-#ifndef VU_METER_DATA_PIN_1
-#error "VU_METER_DATA_PIN_1 is not defined! Please define it for your environment in platformio.ini"
+#ifndef PULSAR_VU_DATA_PIN_1
+#error "PULSAR_VU_DATA_PIN_1 is not defined! Please define it for your environment in platformio.ini"
 #endif
 
-#define VU_METER_NUM_LEDS   12   /* Number of LEDs in each strip */
+#define PULSAR_VU_NUM_LEDS   12   /* Number of LEDs in each strip */
 #define MAX_STRIPS          3    /* Maximum number of strips supported */
 
 /* Serial communication protocol defines (only used in serial mode) */
 #ifndef INPUT_MODE_ANALOG
-#define VU_METER_HEADER_1   0xAB
-#define VU_METER_HEADER_2   0xBA
+#define PULSAR_VU_HEADER_1   0xAB
+#define PULSAR_VU_HEADER_2   0xBA
 #endif
 
 /* Command definitions */
@@ -35,10 +36,10 @@
 #define SEGMENT_END_GREEN   3    /* LEDs 0, 1, 2 */
 #define SEGMENT_END_YELLOW  6    /* LEDs 3, 4, 5 */
 #define SEGMENT_END_ORANGE  9    /* LEDs 6, 7, 8 */
-/* The last segment (red) goes from SEGMENT_END_ORANGE to VU_METER_NUM_LEDS */
+/* The last segment (red) goes from SEGMENT_END_ORANGE to PULSAR_VU_NUM_LEDS */
 
 /* Global state for the device */
-static bool vu_meter_reverse_order = false; /* Flag to reverse VU-Meter direction */
+static bool pulsar_reverse_order = false; /* Flag to reverse VU-Meter direction */
 
 /*
  * Array to hold one or more LED strip objects.
@@ -50,13 +51,13 @@ int active_strips_count = 0;
 
 
 /*
- * vu_meter_get_color - Determine color based on LED position.
+ * pulsar_get_color - Determine color based on LED position.
  * @led_index: The 0-based index of the LED in the strip.
  *
  * Returns the uint32_t color value for the given LED index based on
  * the defined color segments.
  */
-static uint32_t vu_meter_get_color(int led_index)
+static uint32_t pulsar_get_color(int led_index)
 {
     // Color values are the same for all strips, so we can use the first one to generate them.
     if (active_strips_count == 0) return 0;
@@ -92,21 +93,21 @@ static void update_leds(int level)
     if (level < 5) {
         for (i = 0; i < active_strips_count; i++) {
             strips[i]->clear();
-            pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1) : 0;
-            strips[i]->setPixelColor(pixel_index, vu_meter_get_color(0));
+            pixel_index = pulsar_reverse_order ? (PULSAR_VU_NUM_LEDS - 1) : 0;
+            strips[i]->setPixelColor(pixel_index, pulsar_get_color(0));
             strips[i]->show();
         }
         return; /* Exit function */
     }
 
     /* Map level (5-100) to number of LEDs (1-12) */
-    leds_to_light = map(level, 5, 100, 1, VU_METER_NUM_LEDS);
-    leds_to_light = constrain(leds_to_light, 0, VU_METER_NUM_LEDS);
+    leds_to_light = map(level, 5, 100, 1, PULSAR_VU_NUM_LEDS);
+    leds_to_light = constrain(leds_to_light, 0, PULSAR_VU_NUM_LEDS);
 
     /* Update each individual LED on all strips */
-    for (i = 0; i < VU_METER_NUM_LEDS; i++) {
-        pixel_index = vu_meter_reverse_order ? (VU_METER_NUM_LEDS - 1 - i) : i;
-        uint32_t color = (i < leds_to_light) ? vu_meter_get_color(i) : color_off;
+    for (i = 0; i < PULSAR_VU_NUM_LEDS; i++) {
+        pixel_index = pulsar_reverse_order ? (PULSAR_VU_NUM_LEDS - 1 - i) : i;
+        uint32_t color = (i < leds_to_light) ? pulsar_get_color(i) : color_off;
         
         for (int j = 0; j < active_strips_count; j++) {
             strips[j]->setPixelColor(pixel_index, color);
@@ -132,19 +133,19 @@ void setup()
 #endif
 
     // Conditionally create strip objects based on defined pins
-#ifdef VU_METER_DATA_PIN_1
+#ifdef PULSAR_VU_DATA_PIN_1
     if (active_strips_count < MAX_STRIPS) {
-        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_1, NEO_GRB + NEO_KHZ800);
+        strips[active_strips_count++] = new Adafruit_NeoPixel(PULSAR_VU_NUM_LEDS, PULSAR_VU_DATA_PIN_1, NEO_GRB + NEO_KHZ800);
     }
 #endif
-#ifdef VU_METER_DATA_PIN_2
+#ifdef PULSAR_VU_DATA_PIN_2
     if (active_strips_count < MAX_STRIPS) {
-        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_2, NEO_GRB + NEO_KHZ800);
+        strips[active_strips_count++] = new Adafruit_NeoPixel(PULSAR_VU_NUM_LEDS, PULSAR_VU_DATA_PIN_2, NEO_GRB + NEO_KHZ800);
     }
 #endif
-#ifdef VU_METER_DATA_PIN_3
+#ifdef PULSAR_VU_DATA_PIN_3
     if (active_strips_count < MAX_STRIPS) {
-        strips[active_strips_count++] = new Adafruit_NeoPixel(VU_METER_NUM_LEDS, VU_METER_DATA_PIN_3, NEO_GRB + NEO_KHZ800);
+        strips[active_strips_count++] = new Adafruit_NeoPixel(PULSAR_VU_NUM_LEDS, PULSAR_VU_DATA_PIN_3, NEO_GRB + NEO_KHZ800);
     }
 #endif
 
@@ -204,7 +205,7 @@ void loop()
     /* Check if enough bytes are available for a complete packet */
     if (Serial.available() >= 4) {
         /* 1. Search for the Header sequence */
-        if (Serial.read() == VU_METER_HEADER_1 && Serial.read() == VU_METER_HEADER_2) {
+        if (Serial.read() == PULSAR_VU_HEADER_1 && Serial.read() == PULSAR_VU_HEADER_2) {
             int cpu_val;
             int command_val;
 
@@ -214,7 +215,7 @@ void loop()
 
             /* 3. Process commands */
             if (command_val == CMD_REVERSE_ORDER) {
-                vu_meter_reverse_order = !vu_meter_reverse_order; /* Toggle the reverse flag */
+                pulsar_reverse_order = !pulsar_reverse_order; /* Toggle the reverse flag */
             }
 
             /* 4. Update LEDs based on CPU value */

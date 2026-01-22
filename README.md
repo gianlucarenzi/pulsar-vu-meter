@@ -1,15 +1,15 @@
-# CPU & Audio LED VU-Meter
+# Pulsar VU
 
-Un progetto flessibile per creare un VU-meter a 12 LED, capace di funzionare sia come indicatore di carico della CPU di un computer, sia come VU-meter per un segnale audio mono. Il progetto è basato sull'ecosistema **PlatformIO** e supporta diverse schede e configurazioni.
+Un progetto flessibile per creare un **Pulsar VU** (un VU-meter a 12 LED), capace di funzionare sia come indicatore di carico della CPU di un computer, sia come VU-meter per un segnale audio mono. Il progetto è basato sull'ecosistema **PlatformIO** e supporta diverse schede e configurazioni.
 
-![Placeholder](https://via.placeholder.com/600x300.png?text=Immagina+qui+il+tuo+VU-meter+in+azione!)
+![Placeholder](https://via.placeholder.com/600x300.png?text=Immagina+qui+il+tuo+Pulsar+VU+in+azione!)
 
 ---
 
 ## 🌟 Caratteristiche Principali
 
 -   **Doppia Modalità**:
-    1.  **Modalità CPU**: Visualizza il carico complessivo della CPU di un computer (Linux, Windows, macOS) tramite uno script Python che comunica via seriale.
+    1.  **Modalità CPU**: Visualizza il carico complessivo della CPU di un computer (Linux, Windows, macOS) tramite uno script Python (`pulsar_host.py`) che comunica via seriale.
     2.  **Modalità Audio**: Analizza un segnale audio mono da un pin analogico e ne visualizza il volume.
 -   **Multi-Piattaforma (Hardware)**: Supporta nativamente sia **Arduino Nano** che **ESP32 WROVER**, con configurazioni pronte per entrambi.
 -   **Multi-Striscia**: In modalità audio, può pilotare fino a 3 strisce LED identiche in parallelo per un effetto più luminoso o distribuito.
@@ -65,11 +65,11 @@ Il cuore della configurazione è il file `platformio.ini`. Puoi scegliere cosa c
 
 ### 2. Script Host (Solo Modalità CPU/Seriale)
 
-Per usare il VU-meter come indicatore di carico CPU:
+Per usare il **Pulsar VU** come indicatore di carico CPU:
 
-1.  **Modifica lo script**: Apri il file `host_script.py` e imposta la porta seriale corretta per il tuo sistema operativo.
+1.  **Modifica lo script**: Apri il file `pulsar_host.py` e imposta la porta seriale corretta per il tuo sistema operativo.
     ```python
-    # host_script.py
+    # pulsar_host.py
 
     # ...
     # Modifica questo valore in base al tuo sistema operativo:
@@ -79,7 +79,7 @@ Per usare il VU-meter come indicatore di carico CPU:
     ```
 2.  **Esegui lo script**: Dopo aver caricato il firmware in modalità `nano` o `esp32_rover`, lancia lo script da un terminale:
     ```bash
-    python3 host_script.py
+    python3 pulsar_host.py
     ```
 
 ---
@@ -126,9 +126,9 @@ board = nanoatmega328
 build_flags =
     -D INPUT_MODE_ANALOG
     -D ANALOG_INPUT_PIN=A0
-    -D VU_METER_DATA_PIN_1=6
-    -D VU_METER_DATA_PIN_2=7
-    -D VU_METER_DATA_PIN_3=8
+    -D PULSAR_VU_DATA_PIN_1=6
+    -D PULSAR_VU_DATA_PIN_2=7
+    -D PULSAR_VU_DATA_PIN_3=8
 ```
 
 Questo approccio, basato su "build flags", rende il progetto pulito e facilmente estensibile.
