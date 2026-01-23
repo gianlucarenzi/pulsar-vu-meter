@@ -78,10 +78,10 @@ void VuMeterWidget::paintEvent(QPaintEvent *event)
         QRect ledRect(x0, y, ledWidth, ledHeight);
         painter.setPen(QPen(Qt::black, border));
         bool ledOn;
-        if (m_level < 5) {
-            ledOn = (i == specialGreenLed);
+        if (m_level < 12) {
+            ledOn = (i < m_level);
         } else {
-            ledOn = (i < effectiveLevel);
+            ledOn = true;
         }
         painter.setBrush(ledOn ? color : QColor(30, 30, 30));
         painter.drawRect(ledRect);

@@ -184,7 +184,109 @@ void setup()
         strips[i]->begin();
         strips[i]->show(); // Turn off all LEDs at startup
     }
+
+    // --- STARTUP ANIMATION ---
+    // 1. Scorrimento avanti (bianco, barra crescente in 1 secondo)
+    for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++) {
+        for (int s = 0; s < active_strips_count; s++) {
+            strips[s]->clear();
+            for (int j = 0; j <= i; j++)
+                strips[s]->setPixelColor(j, strips[s]->Color(255,255,255));
+            strips[s]->show();
+        }
+        delay(1000/PULSAR_VU_NUM_LEDS);
+    }
+    // 2. Scorrimento indietro (bianco, barra decrescente in 1 secondo)
+    for (int i = PULSAR_VU_NUM_LEDS-1; i >= 0; i--) {
+        for (int s = 0; s < active_strips_count; s++) {
+            strips[s]->clear();
+            for (int j = 0; j <= i; j++)
+                strips[s]->setPixelColor(j, strips[s]->Color(255,255,255));
+            strips[s]->show();
+        }
+        delay(1000/PULSAR_VU_NUM_LEDS);
+    }
+    // 3. Accensione di tutti i LED bianchi
+    for (int s = 0; s < active_strips_count; s++) {
+        for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+            strips[s]->setPixelColor(i, strips[s]->Color(255,255,255));
+        strips[s]->show();
+    }
+    delay(500);
+    // 4. Tutti rossi
+    for (int s = 0; s < active_strips_count; s++) {
+        for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+            strips[s]->setPixelColor(i, strips[s]->Color(255,0,0));
+        strips[s]->show();
+    }
+    delay(300);
+    // 5. Fade rosso -> arancio (barra piena)
+    for (int step = 0; step <= 40; step++) {
+        int r = 255, g = step*6, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g,b));
+            strips[s]->show();
+        }
+        delay(40);
+    }
+    // 6. Fade arancio -> giallo (barra piena)
+    for (int step = 0; step <= 40; step++) {
+        int r = 255-step*6, g = 100+step*4, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g,b));
+            strips[s]->show();
+        }
+        delay(40);
+    }
+    // 7. Fade giallo -> verde (barra piena)
+    for (int step = 0; step <= 40; step++) {
+        int r = 0, g = 200-step*5, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g<0?0:g,b));
+            strips[s]->show();
+        }
+        delay(40);
+    }
+    // 5. Fade rosso -> arancio
+    for (int step = 0; step <= 20; step++) {
+        int r = 255, g = step*5, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g,b));
+            strips[s]->show();
+        }
+        delay(30);
+    }
+    // 6. Fade arancio -> giallo
+    for (int step = 0; step <= 20; step++) {
+        int r = 255-step*5, g = 100+step*5, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g,b));
+            strips[s]->show();
+        }
+        delay(30);
+    }
+    // 7. Fade giallo -> verde
+    for (int step = 0; step <= 20; step++) {
+        int r = 0, g = 200-step*2, b = 0;
+        for (int s = 0; s < active_strips_count; s++) {
+            for (int i = 0; i < PULSAR_VU_NUM_LEDS; i++)
+                strips[s]->setPixelColor(i, strips[s]->Color(r,g<0?0:g,b));
+            strips[s]->show();
+        }
+        delay(30);
+    }
+    // 8. Spegnimento
+    for (int s = 0; s < active_strips_count; s++) {
+        strips[s]->clear();
+        strips[s]->show();
+    }
 }
+
 
 /*
  * loop - Arduino's main continuous loop function.
