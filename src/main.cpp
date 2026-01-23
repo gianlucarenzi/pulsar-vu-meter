@@ -188,10 +188,16 @@ void loop()
     peak_to_peak = signal_max - signal_min;
 
     /*
+     * Normalizza la dinamica tra AVR (10 bit, 5V) e ESP32 (12 bit, 3.3V)
+     */
+    #if defined(ESP32)
+        peak_to_peak = peak_to_peak / 4; // Porta il range 0-4095 a circa 0-1023
+    #endif
+
+    /*
      * Map the peak-to-peak amplitude to the 0-100 range.
-     * A 2Vp-p signal on a 5V Arduino is ~410 ADC units.
-     * We map a range from 10 (noise floor) to 500 for good sensitivity.
-     * This may need tuning based on the actual audio circuit.
+     * A 2Vp-p signal on una board 5V è ~410 ADC units.
+     * Si mappa da 10 (rumore) a 500 per buona sensibilità.
      */
     int level = map(peak_to_peak, 10, 500, 0, 100);
     level = constrain(level, 0, 100);
