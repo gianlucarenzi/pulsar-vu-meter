@@ -17,3 +17,7 @@ __pycache__/
 /sniffer.py
 qtmeter/moc_*.cpp
 qtmeter/moc_*.h
+qtmeter/uic_*.h
+qtmeter/uic_*.cpp
+qtmeter/*.o
+
