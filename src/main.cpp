@@ -20,6 +20,12 @@
 #define PULSAR_VU_NUM_LEDS   12   /* Number of LEDs in each strip */
 #define MAX_STRIPS          3    /* Maximum number of strips supported */
 
+/*
+ * To use a custom color, define these in your build flags or before including this file:
+ * #define LED_CUSTOM_R 100
+ * #define LED_CUSTOM_G 100
+ * #define LED_CUSTOM_B 100
+ */
 /* Serial communication protocol defines (only used in serial mode) */
 #ifndef INPUT_MODE_ANALOG
 #define PULSAR_VU_HEADER_1   0xAB
@@ -32,11 +38,21 @@
 /*
  * LED color segment definitions.
  * Defines the end-point for each color segment (index starts at 0).
+ *
+ * To force all LEDs to a fixed color, define LED_FIXED_COLOR as one of:
+ *   LED_COLOR_GREEN, LED_COLOR_YELLOW, LED_COLOR_ORANGE, LED_COLOR_RED, LED_COLOR_CUSTOM
+ * If LED_COLOR_CUSTOM is used, set LED_CUSTOM_R, LED_CUSTOM_G, LED_CUSTOM_B to desired values.
  */
 #define SEGMENT_END_GREEN   3    /* LEDs 0, 1, 2 */
 #define SEGMENT_END_YELLOW  6    /* LEDs 3, 4, 5 */
 #define SEGMENT_END_ORANGE  9    /* LEDs 6, 7, 8 */
 /* The last segment (red) goes from SEGMENT_END_ORANGE to PULSAR_VU_NUM_LEDS */
+#define LED_COLOR_GREEN   1
+#define LED_COLOR_YELLOW  2
+#define LED_COLOR_ORANGE  3
+#define LED_COLOR_RED     4
+#define LED_COLOR_CUSTOM  5
+/* Example: #define LED_FIXED_COLOR LED_COLOR_GREEN */
 
 /* Global state for the device */
 static bool pulsar_reverse_order = false; /* Flag to reverse VU-Meter direction */
@@ -59,9 +75,22 @@ int active_strips_count = 0;
  */
 static uint32_t pulsar_get_color(int led_index)
 {
-    // Color values are the same for all strips, so we can use the first one to generate them.
     if (active_strips_count == 0) return 0;
-
+#ifdef LED_FIXED_COLOR
+    #if LED_FIXED_COLOR == LED_COLOR_GREEN
+        return strips[0]->Color(0, 150, 0);
+    #elif LED_FIXED_COLOR == LED_COLOR_YELLOW
+        return strips[0]->Color(150, 150, 0);
+    #elif LED_FIXED_COLOR == LED_COLOR_ORANGE
+        return strips[0]->Color(255, 100, 0);
+    #elif LED_FIXED_COLOR == LED_COLOR_RED
+        return strips[0]->Color(200, 0, 0);
+    #elif LED_FIXED_COLOR == LED_COLOR_CUSTOM
+        return strips[0]->Color(LED_CUSTOM_R, LED_CUSTOM_G, LED_CUSTOM_B);
+    #else
+        return strips[0]->Color(0, 0, 0); // fallback: off
+    #endif
+#else
     if (led_index < SEGMENT_END_GREEN) {
         return strips[0]->Color(0, 150, 0);   /* Green */
     } else if (led_index < SEGMENT_END_YELLOW) {
@@ -71,6 +100,7 @@ static uint32_t pulsar_get_color(int led_index)
     } else {
         return strips[0]->Color(200, 0, 0);   /* Red */
     }
+#endif
 }
 
 /*

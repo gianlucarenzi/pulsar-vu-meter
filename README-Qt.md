@@ -12,6 +12,16 @@ Lancia il simulatore in modalità demo:
 ./qtmeter/qtmeter --demo
 ```
 
+Per forzare tutti i LED di un colore:
+
+```sh
+./qtmeter/qtmeter --demo --green
+./qtmeter/qtmeter --demo --yellow
+./qtmeter/qtmeter --demo --orange
+./qtmeter/qtmeter --demo --red
+./qtmeter/qtmeter --demo --custom 100 100 100
+```
+
 Per simulare la modalità reverse (led accesi dall'alto verso il basso):
 
 ```sh
@@ -50,7 +60,7 @@ echo -ne '\xAB\xBA\x32\x01' > ./vCOM  # reverse
 - Il comando seriale `0x01` imposta la modalità reverse (led accesi dall'alto).
 
 ## Caratteristiche
-- Visualizzazione verticale, 12 led, colori: verde, giallo, arancio, rosso.
+- Visualizzazione verticale, 12 led, colori: verde, giallo, arancio, rosso oppure colore fisso selezionabile da CLI (`--green`, `--yellow`, `--orange`, `--red`, `--custom R G B`).
 - Comportamento identico al firmware Pulsar (mapping valori/led, reverse, spegnimento a 0).
 - Debug attivabile da console.
 - Finestra Qt non ridimensionabile, VU meter ancorato in basso.

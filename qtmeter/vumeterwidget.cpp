@@ -49,12 +49,31 @@ void VuMeterWidget::paintEvent(QPaintEvent *event)
         effectiveLevel = (m_level > 100) ? numLeds : ((m_level - 5) * (numLeds - 1) / 95 + 1);
     }
     for (int i = 0; i < numLeds; ++i) {
-        // Colore sempre in base a i (dal basso: verde, giallo, arancio, rosso)
         QColor color;
-        if (i < 3) color = QColor(0, 150, 0);         // verde
-        else if (i < 6) color = QColor(200, 200, 0);  // giallo
-        else if (i < 9) color = QColor(255, 100, 0);  // arancione
-        else color = QColor(200, 0, 0);               // rosso
+        switch (m_colorMode) {
+            case LedColorGreen:
+                color = QColor(0, 150, 0);
+                break;
+            case LedColorYellow:
+                color = QColor(200, 200, 0);
+                break;
+            case LedColorOrange:
+                color = QColor(255, 100, 0);
+                break;
+            case LedColorRed:
+                color = QColor(200, 0, 0);
+                break;
+            case LedColorCustom:
+                color = QColor(m_customR, m_customG, m_customB);
+                break;
+            case LedColorSegments:
+            default:
+                if (i < 3) color = QColor(0, 150, 0);         // verde
+                else if (i < 6) color = QColor(200, 200, 0);  // giallo
+                else if (i < 9) color = QColor(255, 100, 0);  // arancione
+                else color = QColor(200, 0, 0);               // rosso
+                break;
+        }
         int y = m_reverseOrder ? (y0 + i * (ledHeight + spacing)) : (y0 + (numLeds - 1 - i) * (ledHeight + spacing));
         QRect ledRect(x0, y, ledWidth, ledHeight);
         painter.setPen(QPen(Qt::black, border));

@@ -13,10 +13,38 @@ Un progetto flessibile per creare un **Pulsar VU** (un VU-meter a 12 LED), capac
     2.  **Modalità Audio**: Analizza un segnale audio mono da un pin analogico e ne visualizza il volume.
 -   **Multi-Piattaforma (Hardware)**: Supporta nativamente sia **Arduino Nano** che **ESP32 WROVER**, con configurazioni pronte per entrambi.
 -   **Multi-Striscia**: In modalità audio, può pilotare fino a 3 strisce LED identiche in parallelo per un effetto più luminoso o distribuito.
--   **Display a Segmenti di Colore**: L'indicatore non è monocolore, ma si riempie progressivamente con colori diversi (verde, giallo, arancione, rosso) per una lettura più chiara e accattivante.
+-   **Display a Segmenti di Colore o Colore Fisso**: Puoi scegliere se l'indicatore si riempie progressivamente con colori diversi (verde, giallo, arancione, rosso) oppure con un colore fisso (verde, giallo, arancione, rosso, o personalizzato RGB) tramite configurazione nel codice (#define LED_FIXED_COLOR).
 -   **Configurazione Semplice**: Gestito interamente tramite **PlatformIO** in Visual Studio Code, con ambienti pre-configurati per ogni combinazione di scheda e modalità.
 
 ---
+
+## 🔦 Configurazione Colore LED
+
+### Firmware
+
+Per forzare tutti i LED a un colore fisso, aggiungi nel tuo file di configurazione o tra le build flags:
+
+```c
+#define LED_FIXED_COLOR LED_COLOR_GREEN   // verde
+#define LED_FIXED_COLOR LED_COLOR_YELLOW  // giallo
+#define LED_FIXED_COLOR LED_COLOR_ORANGE  // arancione
+#define LED_FIXED_COLOR LED_COLOR_RED     // rosso
+#define LED_FIXED_COLOR LED_COLOR_CUSTOM  // personalizzato
+#define LED_CUSTOM_R 100
+#define LED_CUSTOM_G 100
+#define LED_CUSTOM_B 100
+```
+Se non definito, il comportamento è a segmenti (default).
+
+### Qt Simulator
+
+Puoi scegliere il colore dei LED da CLI:
+- `--green` (tutti verdi)
+- `--yellow` (tutti gialli)
+- `--orange` (tutti arancioni)
+- `--red` (tutti rossi)
+- `--custom R G B` (valori RGB personalizzati)
+Se nessuna opzione è specificata, il comportamento è a segmenti.
 
 ## 🛠️ Hardware Necessario
 
