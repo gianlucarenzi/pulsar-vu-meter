@@ -21,3 +21,6 @@ qtmeter/uic_*.h
 qtmeter/uic_*.cpp
 qtmeter/*.o
 
+/qtmeter/qtmeter
+/qtmeter/qtmeter.pro.user
+/qtmeter/Makefile
