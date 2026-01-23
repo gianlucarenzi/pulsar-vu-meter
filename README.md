@@ -22,19 +22,31 @@ Un progetto flessibile per creare un **Pulsar VU** (un VU-meter a 12 LED), capac
 
 ### Firmware
 
-Per forzare tutti i LED a un colore fisso, aggiungi nel tuo file di configurazione o tra le build flags:
+Per ottenere una barra di colore fisso (verde, giallo, arancione, rosso o personalizzato RGB) durante il funzionamento normale:
 
-```c
-#define LED_FIXED_COLOR LED_COLOR_GREEN   // verde
-#define LED_FIXED_COLOR LED_COLOR_YELLOW  // giallo
-#define LED_FIXED_COLOR LED_COLOR_ORANGE  // arancione
-#define LED_FIXED_COLOR LED_COLOR_RED     // rosso
-#define LED_FIXED_COLOR LED_COLOR_CUSTOM  // personalizzato
-#define LED_CUSTOM_R 100
-#define LED_CUSTOM_G 100
-#define LED_CUSTOM_B 100
+1. Apri il file `platformio.ini`.
+2. Nella sezione `[env:<tuo_ambiente>]`, aggiungi tra le `build_flags` la definizione desiderata:
+
+```ini
+-D LED_FIXED_COLOR=LED_COLOR_GREEN    ; tutti verdi
+-D LED_FIXED_COLOR=LED_COLOR_YELLOW   ; tutti gialli
+-D LED_FIXED_COLOR=LED_COLOR_ORANGE   ; tutti arancioni
+-D LED_FIXED_COLOR=LED_COLOR_RED      ; tutti rossi
+-D LED_FIXED_COLOR=LED_COLOR_CUSTOM   ; colore RGB custom
+-D LED_CUSTOM_R=128                   ; rosso (0-255)
+-D LED_CUSTOM_G=0                     ; verde (0-255)
+-D LED_CUSTOM_B=128                   ; blu (0-255)
 ```
-Se non definito, il comportamento è a segmenti (default).
+Esempio per una barra viola:
+```ini
+-D LED_FIXED_COLOR=LED_COLOR_CUSTOM
+-D LED_CUSTOM_R=128
+-D LED_CUSTOM_G=0
+-D LED_CUSTOM_B=128
+```
+3. Compila e carica il firmware sull'hardware.
+
+Se non definisci nulla, il comportamento sarà "a segmenti" (verde/giallo/arancione/rosso progressivi).
 
 ### Qt Simulator
 
