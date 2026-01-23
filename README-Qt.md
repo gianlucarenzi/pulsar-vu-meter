@@ -37,7 +37,13 @@ socat -d -d PTY,link=./vcom,raw,echo=0,mode=666 PTY,link=./vCOM,raw,echo=0,mode=
 3. Invia dati all'altra seriale (ad esempio con uno script Python o con `echo`):
 
 ```sh
-echo -ne '\xAB\xBA\x32\x00' > ./vCOM
+# Esempio con lo script Python aggiornato:
+python3 pulsar_host.py ./vCOM reverse
+
+# Oppure manualmente:
+echo -ne '\xAB\xBA\x32\x00' > ./vCOM  # normale
+# oppure
+echo -ne '\xAB\xBA\x32\x01' > ./vCOM  # reverse
 ```
 
 - Il simulatore aggiornerà il VU meter in tempo reale in base ai dati ricevuti.

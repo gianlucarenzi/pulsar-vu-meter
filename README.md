@@ -79,8 +79,10 @@ Per usare il **Pulsar VU** come indicatore di carico CPU:
     ```
 2.  **Esegui lo script**: Dopo aver caricato il firmware in modalità `nano` o `esp32_rover`, lancia lo script da un terminale:
     ```bash
-    python3 pulsar_host.py
+    python3 pulsar_host.py [PORTA_SERIAL] [reverse]
     ```
+    - `PORTA_SERIAL` (opzionale): la porta seriale a cui è collegato l'Arduino (es. `/dev/ttyACM0` su Linux, `COM3` su Windows). Se omesso, userà `COM1` su Windows o `./vCOM` su altri sistemi.
+    - `reverse` (opzionale): se specificato, abilita la modalità REVERSE (visualizzazione invertita). Se omesso, la modalità normale è attiva.
 
 ---
 

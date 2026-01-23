@@ -26,7 +26,22 @@ import sys
 # - Linux: '/dev/ttyUSB0', '/dev/ttyACM0' o simile
 # - Windows: 'COM3', 'COM4' o simile
 # - macOS: '/dev/cu.usbserial-XXXX' o simile
-SERIAL_PORT = '/dev/ttyACM0'  # <--- MODIFICARE QUESTO VALORE
+import platform
+
+# Porta seriale a cui è collegato l'Arduino.
+# Modifica questo valore in base al tuo sistema operativo:
+# - Linux: '/dev/ttyUSB0', '/dev/ttyACM0' o simile
+# - Windows: 'COM1' (default) o simile
+# - macOS: '/dev/cu.usbserial-XXXX' o simile
+if len(sys.argv) > 1:
+    SERIAL_PORT = sys.argv[1]
+else:
+    SERIAL_PORT = 'COM1' if platform.system() == 'Windows' else '/dev/ttyUSB0'
+
+REVERSE = False
+if len(sys.argv) > 2 and sys.argv[2].lower() == 'reverse':
+    REVERSE = True
+
 BAUD_RATE = 9600              # Deve corrispondere a Serial.begin() sull'Arduino
 SEND_INTERVAL_SEC = 0.25      # Intervallo tra gli invii (secondi)
 
@@ -69,11 +84,11 @@ def main():
             cpu_load = max(0, min(100, cpu_load))
 
             # Crea il pacchetto di 4 byte
-            # Per ora, il comando è sempre 0x00 (nessun comando)
-            packet = bytearray([HEADER_1, HEADER_2, cpu_load, COMMAND_NONE])
+            command = COMMAND_TOGGLE_REVERSE if REVERSE else COMMAND_NONE
+            packet = bytearray([HEADER_1, HEADER_2, cpu_load, command])
 
             ser.write(packet)
-            # print(f"Inviato: CPU={cpu_load}%") # Debug: decommenta per vedere gli invii
+            # print(f"Inviato: CPU={cpu_load}% REVERSE={REVERSE}") # Debug: decommenta per vedere gli invii
 
             time.sleep(SEND_INTERVAL_SEC)
 
