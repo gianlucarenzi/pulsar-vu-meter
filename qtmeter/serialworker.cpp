@@ -7,15 +7,17 @@ SerialWorker::SerialWorker(QObject *parent)
 }
 
 #include <QDebug>
+extern int debugEnabled;
+#define DEBUG_OUT if(debugEnabled) qDebug
 void SerialWorker::start(const QString &portName)
 {
     m_serial.setPortName(portName);
     m_serial.setBaudRate(QSerialPort::Baud9600);
     bool ok = m_serial.open(QIODevice::ReadOnly);
     if (ok) {
-        qDebug() << "Serial port opened:" << portName;
+        DEBUG_OUT() << "Serial port opened:" << portName;
     } else {
-        qDebug() << "Failed to open serial port:" << portName << m_serial.errorString();
+        DEBUG_OUT() << "Failed to open serial port:" << portName << m_serial.errorString();
     }
 }
 
@@ -23,14 +25,14 @@ void SerialWorker::start(const QString &portName)
 void SerialWorker::handleReadyRead()
 {
     QByteArray data = m_serial.readAll();
-    qDebug() << "Serial received:" << data.toHex();
+    DEBUG_OUT() << "Serial received:" << data.toHex();
     m_buffer.append(data);
     while (m_buffer.size() >= 4) {
         if ((quint8)m_buffer[0] == 0xAB && (quint8)m_buffer[1] == 0xBA) {
             int level = (quint8)m_buffer[2];
             int command = (quint8)m_buffer[3];
             bool reverseOrder = (command == 0x01);
-            qDebug() << "Parsed packet: level=" << level << ", command=" << command;
+            DEBUG_OUT() << "Parsed packet: level=" << level << ", command=" << command;
             emit levelReceived(level, reverseOrder);
             m_buffer.remove(0, 4);
         } else {

@@ -9,6 +9,7 @@ class VuMeterWidget : public QWidget
 public:
     explicit VuMeterWidget(QWidget *parent = nullptr);
     void setLevel(int level, bool reverseOrder = false);
+    void setRawLevel(int rawLevel, bool reverseOrder = false);
     void setReverseOrder(bool reverseOrder);
 
 protected:

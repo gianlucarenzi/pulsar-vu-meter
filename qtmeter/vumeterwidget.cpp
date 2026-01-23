@@ -1,5 +1,8 @@
 #include "vumeterwidget.h"
 #include <QPainter>
+#include <QDebug>
+extern int debugEnabled;
+#define DEBUG_OUT if(debugEnabled) qDebug
 
 VuMeterWidget::VuMeterWidget(QWidget *parent)
     : QWidget(parent)
@@ -11,8 +14,26 @@ VuMeterWidget::VuMeterWidget(QWidget *parent)
 
 void VuMeterWidget::setLevel(int level, bool reverseOrder)
 {
-    m_level = level;
+    // Mappa il livello 0-100 su 0-12 LED accesi (come firmware)
+    int mapped = 0;
+    if (level < 5) {
+        mapped = (level > 0) ? 1 : 0;
+    } else {
+        mapped = qRound((level - 5) * 11.0 / 95.0) + 1;
+        if (mapped < 0) mapped = 0;
+        if (mapped > 12) mapped = 12;
+    }
+    m_level = mapped;
     m_reverseOrder = reverseOrder;
+    DEBUG_OUT() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "VU-METER setLevel: level=" << level << ", mapped=" << mapped << ", reverseOrder=" << reverseOrder;
+    update();
+}
+
+void VuMeterWidget::setRawLevel(int rawLevel, bool reverseOrder)
+{
+    m_level = rawLevel;
+    m_reverseOrder = reverseOrder;
+    DEBUG_OUT() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "VU-METER setRawLevel: rawLevel=" << rawLevel << ", reverseOrder=" << reverseOrder;
     update();
 }
 
@@ -50,28 +71,33 @@ void VuMeterWidget::paintEvent(QPaintEvent *event)
     }
     for (int i = 0; i < numLeds; ++i) {
         QColor color;
+        int r=0,g=0,b=0;
         switch (m_colorMode) {
             case LedColorGreen:
-                color = QColor(0, 150, 0);
+                r=0; g=150; b=0;
+                color = QColor(r, g, b);
                 break;
             case LedColorYellow:
-                color = QColor(200, 200, 0);
+                r=200; g=200; b=0;
+                color = QColor(r, g, b);
                 break;
             case LedColorOrange:
-                color = QColor(255, 100, 0);
+                r=255; g=100; b=0;
+                color = QColor(r, g, b);
                 break;
             case LedColorRed:
-                color = QColor(200, 0, 0);
+                r=200; g=0; b=0;
+                color = QColor(r, g, b);
                 break;
             case LedColorCustom:
                 color = QColor(m_customR, m_customG, m_customB);
                 break;
             case LedColorSegments:
             default:
-                if (i < 3) color = QColor(0, 150, 0);         // verde
-                else if (i < 6) color = QColor(200, 200, 0);  // giallo
-                else if (i < 9) color = QColor(255, 100, 0);  // arancione
-                else color = QColor(200, 0, 0);               // rosso
+                if (i < 3) { r=0; g=150; b=0; color = QColor(r, g, b); }         // verde
+                else if (i < 6) { r=200; g=200; b=0; color = QColor(r, g, b); }  // giallo
+                else if (i < 9) { r=255; g=100; b=0; color = QColor(r, g, b); }  // arancione
+                else { r=200; g=0; b=0; color = QColor(r, g, b); }               // rosso
                 break;
         }
         int y = m_reverseOrder ? (y0 + i * (ledHeight + spacing)) : (y0 + (numLeds - 1 - i) * (ledHeight + spacing));
@@ -82,6 +108,9 @@ void VuMeterWidget::paintEvent(QPaintEvent *event)
             ledOn = (i < m_level);
         } else {
             ledOn = true;
+        }
+        if (ledOn && m_colorMode == LedColorSegments) {
+            DEBUG_OUT() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "LED" << i << "ON: RGB(" << r << g << b << ")";
         }
         painter.setBrush(ledOn ? color : QColor(30, 30, 30));
         painter.drawRect(ledRect);

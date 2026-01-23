@@ -21,13 +21,15 @@ void DemoMode::toggleReverse()
 }
 
 #include <QDebug>
+extern int debugEnabled;
+#define DEBUG_OUT if(debugEnabled) qDebug
 void DemoMode::step()
 {
     int displayValue = m_value;
     if (m_dir < 0 && m_value < 100) {
         displayValue = m_value; // in discesa mostra solo i led accesi
     }
-    qDebug() << "Demo VU value:" << displayValue << ", reverse:" << m_reverseOrder;
+    DEBUG_OUT() << "Demo VU value:" << displayValue << ", reverse:" << m_reverseOrder;
     m_setLevelFunc(displayValue, m_reverseOrder);
     m_value += m_dir;
     if (m_dir > 0 && m_value > 100) {
