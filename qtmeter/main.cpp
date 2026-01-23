@@ -146,7 +146,9 @@ int main(int argc, char *argv[])
         a.processEvents();
         QThread::msleep(100);
         // Ripristina modalità segmenti (verde/giallo/arancio/rosso)
-        meter->setLedColorMode(VuMeterWidget::LedColorSegments);
+        meter->setLedColorMode(colorMode);
+        if (colorMode == VuMeterWidget::LedColorCustom)
+            meter->setCustomColor(customR, customG, customB);
     }
     if (demoMode) {
         w.startDemo(reverseOrder);
