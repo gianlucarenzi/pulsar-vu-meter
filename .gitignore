@@ -24,3 +24,5 @@ qtmeter/*.o
 /qtmeter/qtmeter
 /qtmeter/qtmeter.pro.user
 /qtmeter/Makefile
+/qtmeter/ui*.h
+/qtmeter/.qmake.stash
